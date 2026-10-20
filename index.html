@@ -18,6 +18,10 @@
             color: #333;
         }
 
+        .board-container {
+            position: relative; /* Necessário para posicionar o traço da vitória */
+        }
+
         .board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
@@ -41,6 +45,16 @@
 
         .cell:hover {
             background-color: #e9e9e9;
+        }
+
+        /* Estilo da linha do traço de vitória */
+        .winning-line {
+            position: absolute;
+            background-color: #28a745; /* Cor verde para a vitória */
+            border-radius: 5px;
+            display: none;
+            transition: all 0.3s ease;
+            z-index: 10;
         }
 
         .status {
@@ -70,16 +84,20 @@
 
     <h1>Jogo da Velha</h1>
     
-    <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
+    <div class="board-container">
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <!-- Elemento visual da linha -->
+        <div class="winning-line" id="winningLine"></div>
     </div>
 
     <div class="status" id="status">Vez do Jogador X</div>
@@ -88,14 +106,24 @@
     <script>
         const cells = document.querySelectorAll('.cell');
         const statusText = document.getElementById('status');
+        const winningLine = document.getElementById('winningLine');
         let options = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
         let running = false;
 
+        // Cada condição de vitória inclui a posição/ângulo do traço visual
         const winConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
-            [0, 4, 8], [2, 4, 6]             // Diagonais
+            // Linhas horizontais
+            { combo: [0, 1, 2], style: { width: '290px', height: '8px', top: '50px', left: '10px', transform: 'none' } },
+            { combo: [3, 4, 5], style: { width: '290px', height: '8px', top: '155px', left: '10px', transform: 'none' } },
+            { combo: [6, 7, 8], style: { width: '290px', height: '8px', top: '260px', left: '10px', transform: 'none' } },
+            // Colunas verticais
+            { combo: [0, 3, 6], style: { width: '8px', height: '290px', top: '10px', left: '50px', transform: 'none' } },
+            { combo: [1, 4, 7], style: { width: '8px', height: '290px', top: '10px', left: '155px', transform: 'none' } },
+            { combo: [2, 5, 8], style: { width: '8px', height: '290px', top: '10px', left: '260px', transform: 'none' } },
+            // Diagonais
+            { combo: [0, 4, 8], style: { width: '390px', height: '8px', top: '155px', left: '-38px', transform: 'rotate(45deg)' } },
+            { combo: [2, 4, 6], style: { width: '390px', height: '8px', top: '155px', left: '-38px', transform: 'rotate(-45deg)' } }
         ];
 
         iniciarJogo();
@@ -119,7 +147,6 @@
         function atualizarCelula(cell, index) {
             options[index] = currentPlayer;
             cell.textContent = currentPlayer;
-            // Muda a cor dependendo de quem joga
             cell.style.color = currentPlayer === "X" ? "#d9534f" : "#5bc0de";
         }
 
@@ -128,26 +155,38 @@
             statusText.textContent = `Vez do Jogador ${currentPlayer}`;
         }
 
+        function desenharTraco(lineStyle) {
+            winningLine.style.width = lineStyle.width;
+            winningLine.style.height = lineStyle.height;
+            winningLine.style.top = lineStyle.top;
+            winningLine.style.left = lineStyle.left;
+            winningLine.style.transform = lineStyle.transform;
+            winningLine.style.display = 'block';
+        }
+
         function verificarVencedor() {
             let roundWon = false;
+            let winningComboObj = null;
 
             for (let i = 0; i < winConditions.length; i++) {
                 const condition = winConditions[i];
-                const cellA = options[condition[0]];
-                const cellB = options[condition[1]];
-                const cellC = options[condition[2]];
+                const cellA = options[condition.combo[0]];
+                const cellB = options[condition.combo[1]];
+                const cellC = options[condition.combo[2]];
 
                 if (cellA == "" || cellB == "" || cellC == "") {
                     continue;
                 }
                 if (cellA == cellB && cellB == cellC) {
                     roundWon = true;
+                    winningComboObj = condition;
                     break;
                 }
             }
 
             if (roundWon) {
                 statusText.textContent = `Jogador ${currentPlayer} Venceu!`;
+                desenharTraco(winningComboObj.style);
                 running = false;
             } else if (!options.includes("")) {
                 statusText.textContent = `Deu Velha! (Empate)`;
@@ -164,6 +203,7 @@
             cells.forEach(cell => {
                 cell.textContent = "";
             });
+            winningLine.style.display = 'none'; // Esconde a linha ao reiniciar
             running = true;
         }
     </script>
