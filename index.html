@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Velha</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f4f8;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            background-color: #333;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .cell:hover {
+            background-color: #e9e9e9;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #555;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Jogo da Velha</h1>
+    
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+
+    <div class="status" id="status">Vez do Jogador X</div>
+    <button onclick="reiniciarJogo()">Reiniciar Jogo</button>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        let options = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let running = false;
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
+            [0, 4, 8], [2, 4, 6]             // Diagonais
+        ];
+
+        iniciarJogo();
+
+        function iniciarJogo() {
+            cells.forEach(cell => cell.addEventListener('click', cellClicked));
+            running = true;
+        }
+
+        function cellClicked() {
+            const cellIndex = this.getAttribute('data-index');
+
+            if (options[cellIndex] != "" || !running) {
+                return;
+            }
+
+            atualizarCelula(this, cellIndex);
+            verificarVencedor();
+        }
+
+        function atualizarCelula(cell, index) {
+            options[index] = currentPlayer;
+            cell.textContent = currentPlayer;
+            // Muda a cor dependendo de quem joga
+            cell.style.color = currentPlayer === "X" ? "#d9534f" : "#5bc0de";
+        }
+
+        function trocarJogador() {
+            currentPlayer = (currentPlayer == "X") ? "O" : "X";
+            statusText.textContent = `Vez do Jogador ${currentPlayer}`;
+        }
+
+        function verificarVencedor() {
+            let roundWon = false;
+
+            for (let i = 0; i < winConditions.length; i++) {
+                const condition = winConditions[i];
+                const cellA = options[condition[0]];
+                const cellB = options[condition[1]];
+                const cellC = options[condition[2]];
+
+                if (cellA == "" || cellB == "" || cellC == "") {
+                    continue;
+                }
+                if (cellA == cellB && cellB == cellC) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusText.textContent = `Jogador ${currentPlayer} Venceu!`;
+                running = false;
+            } else if (!options.includes("")) {
+                statusText.textContent = `Deu Velha! (Empate)`;
+                running = false;
+            } else {
+                trocarJogador();
+            }
+        }
+
+        function reiniciarJogo() {
+            currentPlayer = "X";
+            options = ["", "", "", "", "", "", "", "", ""];
+            statusText.textContent = `Vez do Jogador ${currentPlayer}`;
+            cells.forEach(cell => {
+                cell.textContent = "";
+            });
+            running = true;
+        }
+    </script>
+</body>
+</html>
